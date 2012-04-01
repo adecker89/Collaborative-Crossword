@@ -47,8 +47,9 @@ function getCell(x,y)
 	return $("#crossword tr").eq(y).find('td').eq(x).find('input')[0];
 }
 
-function nextCell(input) {
-	return nextCellAcross(input);
+function prevCell(input)
+{
+	return prevCellAcross(input);
 }
 
 function prevCellAcross(input) {
@@ -66,6 +67,10 @@ function prevCellAcross(input) {
 	while(td.hasClass("blackcell"));
 	
 	return td.children("input").first();	
+}
+
+function nextCell(input) {
+	return nextCellAcross(input);
 }
 
 function nextCellAcross(input) {
@@ -87,11 +92,15 @@ function nextCellAcross(input) {
 
 function updateInput(cell)
 {
-	cell.value = cell.value.toUpperCase();
-	var oldVal = $(cell).data('oldVal');
-	cell.value = cell.value.replace(oldVal,'');
 	
-	cell.value = cell.value[0]
+	if(cell.value.length > 0)
+	{
+		cell.value = cell.value.toUpperCase();
+		var oldVal = $(cell).data('oldVal');
+		cell.value = cell.value.replace(oldVal,'');
+		
+		cell.value = cell.value[0];
+	}
 	
 	var didChange = cell.value == oldVal;
 	
@@ -109,19 +118,39 @@ function onInput(event) {
 		socket.send(JSON.stringify(change));
 	}
 
-	var next  = nextCell(this);
-	
-	//chrome refocuses on the input if we call it before returning
-	setTimeout(function() { next.focus() }, 0);
+	//only move if this cell has a value
+	if(this.value.length != 0)
+	{
+		var next  = nextCell(this);
+		//chrome refocuses on the input if we call it before returning
+		setTimeout(function() { next.focus() }, 0);
+	}
 }
 
 
 function onKeydown(event) {
 	switch(event.keyCode)
 	{
+	/* backspace */
+	case 8:	
+		if(this.value.length == 0)
+		{
+			var prev = prevCell(this);
+			prev.value = '';
+			prev.focus();
+		}
+		else
+			this.value = '';
+		
+		break;
+		
+	/* left arrow */
 	case 37:prevCellAcross(this).focus();break;
-	case 38: /* up */ break;
+	 /* up arrow*/
+	case 38: break;
+	/* right arrow */
 	case 39:nextCellAcross(this).focus();break;
+	/* down arrow */
 	case 40: /*down*/ break;
 	}
 }
