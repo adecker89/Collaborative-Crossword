@@ -4,7 +4,7 @@ var socket = new io.Socket();
 $(document).ready(function() {
 	
 	$('.cell').bind('input',onInput);
-   //$('.cell').keypress(onCellKeypress);
+	$('.cell').keydown(onKeydown);
    //$('.cell').blur(onChange);
    
    socket.connect();
@@ -51,6 +51,23 @@ function nextCell(input) {
 	return nextCellAcross(input);
 }
 
+function prevCellAcross(input) {
+	var td = $(input).parent("td");
+	
+	do
+	{
+		var td = $(td).prev("td");
+		//detects the end of a row and moves down a row 
+		if(td.length == 0)
+		{
+			td = $(input).parent("td").parent("tr").prev("tr").children("td").last();
+		}	
+	}
+	while(td.hasClass("blackcell"));
+	
+	return td.children("input").first();	
+}
+
 function nextCellAcross(input) {
 	var td = $(input).parent("td");
 	
@@ -61,7 +78,7 @@ function nextCellAcross(input) {
 		if(td.length == 0)
 		{
 			td = $(input).parent("td").parent("tr").next("tr").children("td").first();
-		}		
+		}	
 	}
 	while(td.hasClass("blackcell"));
 	
@@ -70,28 +87,41 @@ function nextCellAcross(input) {
 
 function updateInput(cell)
 {
-	cell.value = cell.value.replace($(cell).data('oldVal'),'');
-	cell.value = cell.value[0].toUpperCase();
+	cell.value = cell.value.toUpperCase();
+	var oldVal = $(cell).data('oldVal');
+	cell.value = cell.value.replace(oldVal,'');
+	
+	cell.value = cell.value[0]
+	
+	var didChange = cell.value == oldVal;
 	
 	$(cell).data('oldVal',cell.value);
+	
+	return didChange;
 }
 
 function onInput(event) {
-	updateInput(this);
+	var didChange = updateInput(this);
 	
+	if(didChange)
+	{
+		var change = new Change	(getX(this),getY(this),this.value);
+		socket.send(JSON.stringify(change));
+	}
+
 	var next  = nextCell(this);
 	
 	//chrome refocuses on the input if we call it before returning
 	setTimeout(function() { next.focus() }, 0);
 }
 
-function onChange(event) {
-	this.value=this.value.toUpperCase();
-	
-	var cell = $(this).parent();
-	var row =  $(this).parent().parent();
-	var change = new Change	(getX(this),getY(this),this.value);
-	socket.send(JSON.stringify(change));
-	$.print(JSON.stringify(change));
-}
 
+function onKeydown(event) {
+	switch(event.keyCode)
+	{
+	case 37:prevCellAcross(this).focus();break;
+	case 38: /* up */ break;
+	case 39:nextCellAcross(this).focus();break;
+	case 40: /*down*/ break;
+	}
+}
