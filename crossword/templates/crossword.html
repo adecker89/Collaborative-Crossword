@@ -1,0 +1,38 @@
+{% extends "base.html" %} 
+
+{%block scripts%} 
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}crossword.css"/>
+
+<script src="http://api.jquery.com/scripts/events.js"></script>
+
+{% load socketio_tags %}
+{% socketio %}
+<script src="{{ STATIC_URL }}crossword.js" type="text/javascript"></script>
+
+<script>
+
+	
+	
+</script>
+{%endblock%} 
+	
+{%block content%}
+<table border=0.5 bgcolor=black id="crossword">
+	{% for row in board %}
+		<tr>
+		{%for cell in row%}
+			{%if cell%}
+				<td class="blackcell">/td>
+			{%else%}
+				<td bgcolor=white>
+					<span class="cellLabel"></span>
+					<input type="text" class="cell"/>
+				</td>
+			{%endif%}
+		{%endfor%}
+		</tr>
+	{%endfor%}
+</table>
+{% endblock %}
+

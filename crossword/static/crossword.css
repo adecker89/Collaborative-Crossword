@@ -1,0 +1,6 @@
+
+//body{ background-color: gray;}
+
+.cell{display:inline; border: 0; margin: 0; width: 30px; height: 30px;text-align: center;}
+.blackcell{background-color:black;}
+.cellLabel{font-size:x-small; position:absolute}
