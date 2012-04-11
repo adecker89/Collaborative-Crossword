@@ -8,8 +8,15 @@ import argparse, sys
 from struct import unpack,unpack_from
 from numpy import array, zeros
 
+class Cell:
+    def __init__(self,val,x,y):
+        self.x = x
+        self.y = y
+        self.value = val
+        
 
-class puzFormat:
+
+class PuzFormat:
     #http://code.google.com/p/puz/wiki/FileFormat
     def read(self, filename):
         
@@ -19,12 +26,14 @@ class puzFormat:
         data = f.read()
         self.readHeader(data)
         
-        
-        sol = data[headerEnd:headerEnd+self.width*self.height]
+        start = headerEnd
+        end = start+self.width*self.height
+        sol = data[start:end]
         self.readSolution(sol)
         
-        board = data[headerEnd+self.width*self.height:headerEnd+(self.width*self.height)*2]
-        self.readBoard(board)
+        start = end + self.width*self.height
+        strings = data[start:]
+        self.readStrings(strings)
         
     def readHeader(self,data):
         self.width = ord(data[0x2c])
@@ -32,42 +41,44 @@ class puzFormat:
         self.clueCount = unpack_from("<h",data,offset=0x2e)[0]
         
     def readSolution(self,data):
-        #print data
-        
-        self.ansAcross = []
-        
-        answer = ''
-        for char in data:
-            if char == '.':
-                if not len(answer) == 0:
-                    self.ansAcross.append(answer)
-                answer = ''
-            else:
-                answer += char
-        #print self.ansAcross
-        
-    def readBoard(self,data):
-        #print data
-        
-        self.board = zeros((self.height,self.width))
+        ''''self.board = [[]*self.height]*self.width
         
         for y in range(self.height):
             for x in range(self.width):
-                self.board[x][y] = (data[y*self.height + x] == '.')
+                self.board[x][y] = Cell(data[y*self.height + x],x,y)'''
         
-    def boardToHTML(self):
-        html = "<html><head><script> function change() { alert('hello); } </script></head><body><table border=0.5 bgcolor=black>"
-        for y in range(self.height):
-            html += "<tr>"
-            for x in range(self.width):
-                if not self.board[x][y]:
-                    html += "<td bgcolor=white ><input type=text onChange=\"alert('hello')\"/>&nbsp&nbsp&nbsp</td>"
-                else:
-                    html += "<td bgcolor=black>&nbsp&nbsp&nbsp</td>"
-            html += "</tr>"
-        html += "</table></body></html>"
-        return html
+        self.board = [[Cell(data[y*self.height + x],x,y) for x in range(self.width)] for y in range(self.height)]
                 
+    def readStrings(self,data):
+        #print data
+        self.title = self.readString(data)
+        print self.title
+        
+        data = data[len(self.title)+1:]
+        self.author = self.readString(data)
+        print self.author
+        
+        data = data[len(self.author)+1:]
+        self.copyright = self.readString(data)
+        print self.copyright
+        
+        data = data[len(self.copyright)+1:]
+        self.clues = []
+        while len(data) >= 0:
+            self.clues.append(self.readString(data))
+            if len(self.clues[-1]) == 0:
+                break
+            print self.clues[-1]
+            data = data[len(self.clues[-1])+1:]
+    
+    def readString(self,data):
+        string = ''
+        for char in data:
+            if char == '\0':
+                return string
+            else:
+                string += char
+        return string
         
     def __repr__(self):
         return str(self.width)+"x"+str(self.height)+"\nNumber of clues: "+str(self.clueCount)
@@ -79,13 +90,10 @@ def main(argv=None):
     parser.add_argument('filename', help='file to be examined')
     args = parser.parse_args()
     
-    puz = puzFormat()
+    puz = PuzFormat()
     puz.read(args.filename)
     print
     print puz
-    
-    f = open("out.html","w")
-    f.write( puz.boardToHTML())
 
 
 if __name__ == "__main__":

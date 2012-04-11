@@ -102,7 +102,7 @@ function updateInput(cell)
 		cell.value = cell.value[0];
 	}
 	
-	var didChange = cell.value == oldVal;
+	var didChange = cell.value != oldVal;
 	
 	$(cell).data('oldVal',cell.value);
 	
@@ -140,7 +140,10 @@ function onKeydown(event) {
 			prev.focus();
 		}
 		else
+		{
 			this.value = '';
+			$(this).trigger('input');
+		}
 		
 		break;
 		

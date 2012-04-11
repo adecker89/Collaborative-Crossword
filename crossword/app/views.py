@@ -3,12 +3,12 @@ from django.shortcuts import render
 
 from django_socketio import events
 
-from puzReader import puzFormat
+from puzReader import PuzFormat
 
 def home(request):
     print "home"
-    puz = puzFormat()
-    puz.read('jz120105.puz')
+    puz = PuzFormat()
+    puz.read('spectrum.puz')
     
     c = {'puz':puz,'ys':range(puz.height),'xs':range(puz.width),'board':puz.board}
     c.update(csrf(request))
